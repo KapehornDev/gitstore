@@ -1,4 +1,3 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
 name: Vite Github Pages Deployer
 description: "Deploy your Vite app to github pages using actions. Doesn't require commits and pushes, clean deployment using only artifacts."
 branding:
