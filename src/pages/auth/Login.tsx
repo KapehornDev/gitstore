@@ -1,26 +1,64 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // In a real app, this would call an authentication API
-    setTimeout(() => {
+    
+    try {
+      await signIn(email, password);
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "GitHub login failed",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,6 +84,8 @@ const Login = () => {
             className="space-y-6"
           >
             <button 
+              onClick={handleGithubLogin}
+              disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 bg-foreground text-background hover:bg-foreground/90 py-3 px-4 rounded-lg font-medium transition-colors"
             >
               <Github className="h-5 w-5" />

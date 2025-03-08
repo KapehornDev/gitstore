@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Github, Store, Search, User, ChevronRight, Menu, X } from 'lucide-react';
+import { Github, Store, Search, User, ChevronRight, Menu, X, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,7 +13,10 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +30,13 @@ const Layout = ({ children }: LayoutProps) => {
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const navItems = [
     { name: 'Discover', path: '/discover', icon: <Search className="h-4 w-4 mr-2" /> },
@@ -71,18 +81,44 @@ const Layout = ({ children }: LayoutProps) => {
 
             {/* Right section - auth buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              <Link 
-                to="/auth/login" 
-                className="text-sm font-medium hover:text-primary transition-all-200"
-              >
-                Log in
-              </Link>
-              <Link 
-                to="/auth/signup" 
-                className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-all-200"
-              >
-                Sign up
-              </Link>
+              {user ? (
+                <div className="relative">
+                  <button 
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center space-x-2 text-sm font-medium hover:text-primary transition-all-200"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>{user.email}</span>
+                  </button>
+                  
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-background rounded-md shadow-lg py-1 z-50 border border-border">
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-muted"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link 
+                    to="/auth/login" 
+                    className="text-sm font-medium hover:text-primary transition-all-200"
+                  >
+                    Log in
+                  </Link>
+                  <Link 
+                    to="/auth/signup" 
+                    className="text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-all-200"
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -126,18 +162,30 @@ const Layout = ({ children }: LayoutProps) => {
             </nav>
             
             <div className="mt-auto pt-6 border-t border-border flex flex-col space-y-4 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-              <Link 
-                to="/auth/login" 
-                className="w-full py-3 text-center text-foreground font-medium rounded-lg border border-border hover:bg-muted transition-all-200"
-              >
-                Log in
-              </Link>
-              <Link 
-                to="/auth/signup" 
-                className="w-full py-3 text-center text-primary-foreground font-medium bg-primary rounded-lg hover:bg-primary/90 transition-all-200"
-              >
-                Sign up with GitHub
-              </Link>
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-3 text-center text-foreground font-medium rounded-lg border border-border hover:bg-muted transition-all-200 flex items-center justify-center"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </button>
+              ) : (
+                <>
+                  <Link 
+                    to="/auth/login" 
+                    className="w-full py-3 text-center text-foreground font-medium rounded-lg border border-border hover:bg-muted transition-all-200"
+                  >
+                    Log in
+                  </Link>
+                  <Link 
+                    to="/auth/signup" 
+                    className="w-full py-3 text-center text-primary-foreground font-medium bg-primary rounded-lg hover:bg-primary/90 transition-all-200"
+                  >
+                    Sign up with GitHub
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,27 +1,80 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!termsAccepted) {
+      toast({
+        variant: "destructive",
+        title: "Terms and conditions",
+        description: "Please accept the terms and conditions to continue.",
+      });
+      return;
+    }
+    
     setIsLoading(true);
-    // In a real app, this would call an registration API
-    setTimeout(() => {
+    
+    try {
+      await signUp(email, password, name);
+      toast({
+        title: "Welcome to GitStore!",
+        description: "Please check your email to confirm your account.",
+      });
+    } catch (error) {
+      console.error('Signup error:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
+  };
+
+  const handleGithubSignup = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "GitHub signup failed",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,6 +100,8 @@ const Signup = () => {
             className="space-y-6"
           >
             <button 
+              onClick={handleGithubSignup}
+              disabled={isLoading}
               className="w-full flex items-center justify-center gap-2 bg-foreground text-background hover:bg-foreground/90 py-3 px-4 rounded-lg font-medium transition-colors"
             >
               <Github className="h-5 w-5" />
@@ -110,6 +165,8 @@ const Signup = () => {
                   <input
                     id="terms"
                     type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
                     className="w-4 h-4 border border-border rounded"
                     required
                   />
