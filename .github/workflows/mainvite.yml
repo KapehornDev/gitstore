@@ -1,2 +1,133 @@
-- name: Vite Github Pages Deployer
-  uses: skywarth/vite-github-pages-deployer@v1.4.0
+# Sample workflow for building and deploying a Jekyll site to GitHub Pages
+name: Vite Github Pages Deployer
+description: "Deploy your Vite app to github pages using actions. Doesn't require commits and pushes, clean deployment using only artifacts."
+branding:
+  icon: 'zap'  
+  color: 'purple'
+author: 'Skywarth'
+inputs:
+  public_base_path:
+    description: "Public base path string for vite, this affects the routing, history and asset links. Make sure to provide appropriately since Github Pages stores your app in a directory under a subdomain."
+    required: false
+    #default: "/${{ github.event.repository.name }}" //Vanilla default value. Altered down the steps in regard for https://github.com/skywarth/vite-github-pages-deployer/issues/5
+    default: ''
+  build_path:
+    description: "Which folder do you want your Github Page to use as root directory. Usually it is your build output directory such as ./dist "
+    required: false
+    default: ./dist
+  install_phase_node_env:
+    description: "Node env that will be used for the installation of dependencies. It is imperative you use an environment that has 'vite' as dependency. Commonly, that is 'dev'."
+    required: false
+    default: 'dev'
+  build_phase_node_env:
+    description: "Node env that will be used for build phase."
+    required: false
+    default: 'production'
+  package_manager:
+    description: "Your preference of package manager: 'npm' and 'yarn' are possible values."
+    required: false
+    default: 'npm'
+  artifact_name:
+    description: "Desired name for the Deployment environment. It is also the exposed artifact name which contains the build output (dist)."
+    required: false
+    default: github-pages
+  debug_mode:
+    description: "Controls the debug mode, boolean, true is for on. When turned on, it'll output certain information on certain steps. Mainly used for development, but use it as you please to inspect your env and variables."
+    required: false
+    default: 'false'
+  working_path:
+    description: "Controls the working directory for both install and build steps"
+    required: false
+    default: "./"
+outputs:
+  github_pages_url:
+    description: Github pages url provided by actions/deploy-pages, exposed as is.
+    value: ${{steps.deployment.outputs.page_url}}
+runs:
+  using: "composite"
+  steps:
+      - name: Determine Public Base Path
+        run: |
+          if [ -z "${{ inputs.public_base_path }}" ]; then
+            if [ -f $GITHUB_WORKSPACE/CNAME ]; then
+              PUBLIC_BASE_PATH="/"
+            else
+              PUBLIC_BASE_PATH="/${{ github.event.repository.name }}"
+            fi
+          else
+            PUBLIC_BASE_PATH="${{ inputs.public_base_path }}"
+          fi
+          echo "PUBLIC_BASE_PATH=${PUBLIC_BASE_PATH}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Dump context
+        if: ${{ inputs.debug_mode=='true'}}
+        uses: crazy-max/ghaction-dump-context@v2
+      - name: Dump build_path
+        if: ${{ inputs.debug_mode=='true'}}
+        run: echo "build_path is ${{ inputs.build_path }}"
+        shell: bash
+      - name: Dump working_path
+        if: ${{ inputs.debug_mode=='true' }}
+        run: echo "working_path is ${{ inputs.working_path }}"
+        shell: bash
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Install
+        working-directory: ${{ inputs.working_path }}
+        env:
+          NODE_ENV: ${{ inputs.install_phase_node_env}}
+        run: |
+              # Installing dependencies
+              if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Install phase began. install_phase_node_env: ${{ inputs.install_phase_node_env}}"; fi;
+              if [[ "${{ inputs.package_manager }}" == "yarn" ]]
+              then 
+                if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Installing via yarn"; fi;
+                yarn install --immutable --immutable-cache --check-cache;
+              else
+                if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Installing via npm"; fi;
+                npm ci; 
+              fi
+        shell: bash
+        #env:
+        #  NODE_ENV: production //Don't enable, it won't install Vite (ofc), and will fail the next step because vite will not be there
+      - name: Build
+        working-directory: ${{ inputs.working_path }}
+        env:
+          NODE_ENV: ${{ inputs.build_phase_node_env}}
+        run: |
+              # Building project
+              echo "public base path. $PUBLIC_BASE_PATH";
+              if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Build phase began. build_phase_node_env: ${{ inputs.build_phase_node_env}}"; fi;
+              if [[ "${{ inputs.package_manager }}" == "yarn" ]]
+              then 
+                if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Building via yarn"; fi;
+                yarn build -- --base=$PUBLIC_BASE_PATH #${{ inputs.public_base_path }}
+              else 
+                if [[ "${{ inputs.debug_mode }}" == "true" ]]; then echo "Building via npm"; fi;
+                npm run build -- --base=$PUBLIC_BASE_PATH #${{ inputs.public_base_path }}
+              fi
+        shell: bash
+      - name: Set artifact path
+        run: |
+          if [[ "${{ inputs.build_path }}" == /* ]]; then
+            echo "ARTIFACT_PATH=${{ inputs.build_path }}" >> $GITHUB_ENV
+          else
+            if [ "${{ inputs.working_path }}" = "./" ]; then
+              echo "ARTIFACT_PATH=${{ inputs.build_path }}" >> $GITHUB_ENV
+            else
+              echo "ARTIFACT_PATH=${{ inputs.working_path }}/${{ inputs.build_path }}" >> $GITHUB_ENV
+            fi
+          fi
+        shell: bash
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.ARTIFACT_PATH }}
+          name: ${{ inputs.artifact_name }}
+
+      - name: Deploy
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ inputs.artifact_name }}
+        id: deployment
