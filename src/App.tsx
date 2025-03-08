@@ -21,6 +21,7 @@ import Blog from "./pages/Blog";
 import Support from "./pages/Support";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Callback from "./pages/auth/Callback";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/support" element={<Support />} />
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<Callback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
