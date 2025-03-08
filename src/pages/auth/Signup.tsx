@@ -6,7 +6,7 @@ import Layout from '@/components/Layout';
 import { Github, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +16,7 @@ const Signup = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   useEffect(() => {
     window.scrollTo(0, 0);

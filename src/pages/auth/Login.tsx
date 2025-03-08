@@ -5,7 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   useEffect(() => {
     window.scrollTo(0, 0);
