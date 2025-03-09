@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -39,7 +38,6 @@ const GitHubRepoImport = () => {
   };
 
   const extractOwnerAndRepo = (url: string): { owner: string; repo: string } | null => {
-    // Extract owner and repo from GitHub URL format: https://github.com/owner/repo
     const githubRegex = /github\.com\/([^\/]+)\/([^\/]+)/;
     const match = url.match(githubRegex);
     
@@ -68,7 +66,6 @@ const GitHubRepoImport = () => {
     setIsLoading(true);
     
     try {
-      // Fetch repository metadata from GitHub API
       const response = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}`);
       
       if (!response.ok) {
@@ -77,11 +74,9 @@ const GitHubRepoImport = () => {
       
       const data = await response.json();
       
-      // Check for .GitStore file in the repository
       const gitStoreFileResponse = await fetch(`https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/.GitStore`);
       const hasGitStoreFile = gitStoreFileResponse.ok;
       
-      // Format the data
       const metadata: RepoMetadata = {
         id: data.id,
         name: data.name,
@@ -121,8 +116,6 @@ const GitHubRepoImport = () => {
     setIsLoading(true);
     
     try {
-      // Store repo metadata in Supabase using raw SQL
-      // This approach avoids TypeScript errors since the table is new
       const { error } = await supabase.rpc('insert_github_repo', {
         p_user_id: user.id,
         p_repo_id: repoMetadata.id.toString(),

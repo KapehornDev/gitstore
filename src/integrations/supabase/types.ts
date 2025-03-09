@@ -254,7 +254,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      insert_github_repo: {
+        Args: {
+          p_user_id: string
+          p_repo_id: string
+          p_name: string
+          p_full_name: string
+          p_description: string
+          p_html_url: string
+          p_stars: number
+          p_forks: number
+          p_language: string
+          p_topics: string[]
+          p_owner_login: string
+          p_owner_avatar_url: string
+          p_has_gitstore_file: boolean
+          p_license_key: string
+          p_license_name: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
