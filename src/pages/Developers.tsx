@@ -1,15 +1,54 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { Github, Upload, Settings, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Github, Upload, Settings, ChevronRight, Code, Package, GitFork } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Developers = () => {
+  const { user, isUserDeveloper } = useAuth();
+  const navigate = useNavigate();
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // If user is already a developer, show a button to go to the developer console
+  const renderAction = () => {
+    if (user && isUserDeveloper()) {
+      return (
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link 
+            to="/console" 
+            className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/20 transition-all inline-flex items-center"
+          >
+            <Code className="mr-2 h-4 w-4" />
+            Go to Developer Console
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link 
+          to="/auth/signup" 
+          className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/20 transition-all inline-flex items-center"
+        >
+          <Github className="mr-2 h-4 w-4" />
+          Sign Up with GitHub
+        </Link>
+        <Link 
+          to="/docs" 
+          className="bg-card text-foreground border border-border px-6 py-3 rounded-full font-medium inline-flex items-center shadow-md hover:shadow-lg transition-all"
+        >
+          View Documentation
+        </Link>
+      </div>
+    );
+  };
 
   return (
     <Layout>
@@ -28,21 +67,7 @@ const Developers = () => {
             <p className="text-xl text-muted-foreground mb-8">
               GitStore provides a seamless way to share your applications with users across all platforms, leveraging the power of GitHub repositories.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                to="/auth/signup" 
-                className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/20 transition-all inline-flex items-center"
-              >
-                <Github className="mr-2 h-4 w-4" />
-                Sign Up with GitHub
-              </Link>
-              <Link 
-                to="/docs" 
-                className="bg-card text-foreground border border-border px-6 py-3 rounded-full font-medium inline-flex items-center shadow-md hover:shadow-lg transition-all"
-              >
-                View Documentation
-              </Link>
-            </div>
+            {renderAction()}
           </motion.div>
         </div>
       </div>
@@ -82,7 +107,7 @@ const Developers = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="flex flex-col items-center text-center"
             >
-              <div className="p-4 rounded-full bg-primary/10 text-primary mb-6">
+              <div className={`p-4 rounded-full bg-primary/10 text-primary mb-6`}>
                 {step.icon}
               </div>
               <h3 className="text-xl font-display font-semibold mb-3">{step.title}</h3>
@@ -95,49 +120,91 @@ const Developers = () => {
       <div className="bg-muted/30 py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-4">Developer Resources</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-4">Developer Features</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to get started with distributing your apps through GitStore.
+              Powerful tools to help you distribute and manage your applications
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               {
-                title: "Documentation",
-                description: "Comprehensive guides to help you integrate your apps with GitStore.",
-                link: "/docs"
+                icon: <GitFork className="h-10 w-10 mb-4 text-primary" />,
+                title: "GitHub Integration",
+                description: "Seamlessly connect your repositories and automatically sync updates when you push changes."
               },
               {
-                title: "API Reference",
-                description: "Detailed API documentation for advanced integration options.",
-                link: "/docs/api"
+                icon: <Package className="h-10 w-10 mb-4 text-primary" />,
+                title: "Cross-Platform Distribution",
+                description: "Distribute your apps across Windows, macOS, Linux, iOS, and Android from a single repository."
               },
               {
-                title: "Example Projects",
-                description: "Sample repositories with GitStore integration to help you get started.",
-                link: "/docs/examples"
-              },
-              {
-                title: "Support",
-                description: "Get help from our team and community of developers.",
-                link: "/support"
+                icon: <Code className="h-10 w-10 mb-4 text-primary" />,
+                title: "Developer APIs",
+                description: "Access powerful APIs to automate your workflow and integrate with your existing tools."
               }
-            ].map((resource, index) => (
-              <Link 
+            ].map((feature, index) => (
+              <motion.div
                 key={index}
-                to={resource.link}
-                className="bg-card hover:bg-card/90 border rounded-xl p-6 flex flex-col h-full transition-all hover:shadow-md"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center h-full"
               >
-                <h3 className="text-xl font-display font-semibold mb-2">{resource.title}</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">{resource.description}</p>
-                <div className="flex items-center text-primary text-sm font-medium">
-                  Explore
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </div>
-              </Link>
+                {feature.icon}
+                <h3 className="text-xl font-display font-semibold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
+              </motion.div>
             ))}
           </div>
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-20 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-4">Developer Resources</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Everything you need to get started with distributing your apps through GitStore.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {[
+            {
+              title: "Documentation",
+              description: "Comprehensive guides to help you integrate your apps with GitStore.",
+              link: "/docs"
+            },
+            {
+              title: "API Reference",
+              description: "Detailed API documentation for advanced integration options.",
+              link: "/docs/api"
+            },
+            {
+              title: "Example Projects",
+              description: "Sample repositories with GitStore integration to help you get started.",
+              link: "/docs/examples"
+            },
+            {
+              title: "Support",
+              description: "Get help from our team and community of developers.",
+              link: "/support"
+            }
+          ].map((resource, index) => (
+            <Link 
+              key={index}
+              to={resource.link}
+              className="bg-card hover:bg-card/90 border rounded-xl p-6 flex flex-col h-full transition-all hover:shadow-md"
+            >
+              <h3 className="text-xl font-display font-semibold mb-2">{resource.title}</h3>
+              <p className="text-muted-foreground mb-4 flex-grow">{resource.description}</p>
+              <div className="flex items-center text-primary text-sm font-medium">
+                Explore
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </Layout>

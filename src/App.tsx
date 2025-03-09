@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Categories from "./pages/Categories";
 import CategoryDetail from "./pages/CategoryDetail";
 import Developers from "./pages/Developers";
+import DeveloperConsole from "./pages/DeveloperConsole";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/categories" element={<Categories />} />
               <Route path="/category/:id" element={<CategoryDetail />} />
               <Route path="/developers" element={<Developers />} />
+              <Route path="/console" element={<DeveloperConsole />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
