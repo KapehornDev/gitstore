@@ -32,10 +32,19 @@ const Callback = () => {
         if (error) throw error;
         
         if (data?.session) {
+          // Check if there's user metadata for further setup
+          const userDetails = data.session.user;
+          
+          // Successful login, log details for debugging
+          console.log('Authentication successful:', userDetails);
+          
+          // Display a success message to the user
           toast({
             title: "Successfully authenticated",
-            description: "You have been logged in successfully.",
+            description: "You have been logged in with GitHub successfully.",
           });
+          
+          // Redirect to the homepage
           navigate('/', { replace: true });
         } else {
           // No session found, may still be processing

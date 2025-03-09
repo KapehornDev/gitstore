@@ -5,14 +5,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const { signIn, signInWithGitHub, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -44,20 +43,10 @@ const Login = () => {
   const handleGithubLogin = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) throw error;
+      await signInWithGitHub();
+      // Redirect happens automatically
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "GitHub login failed",
-        description: error.message,
-      });
+      console.error('GitHub login error:', error);
     } finally {
       setIsLoading(false);
     }

@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const Signup = () => {
@@ -14,7 +13,8 @@ const Signup = () => {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const { signUp, user } = useAuth();
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const { signUp, signInWithGitHub, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -57,22 +57,21 @@ const Signup = () => {
   };
 
   const handleGithubSignup = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
+    if (!termsAccepted) {
       toast({
         variant: "destructive",
-        title: "GitHub signup failed",
-        description: error.message,
+        title: "Terms and conditions",
+        description: "Please accept the terms and conditions to continue with GitHub.",
       });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await signInWithGitHub();
+      // Redirect happens automatically
+    } catch (error: any) {
+      console.error('GitHub signup error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +99,33 @@ const Signup = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="space-y-6"
           >
+            <div className="flex items-center justify-center mb-4">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDeveloper(false)}
+                  className={`px-4 py-2 rounded-l-lg border ${
+                    !isDeveloper 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  User
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDeveloper(true)}
+                  className={`px-4 py-2 rounded-r-lg border ${
+                    isDeveloper 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  Developer
+                </button>
+              </div>
+            </div>
+            
             <button 
               onClick={handleGithubSignup}
               disabled={isLoading}
@@ -107,6 +133,7 @@ const Signup = () => {
             >
               <Github className="h-5 w-5" />
               Continue with GitHub
+              {isDeveloper && <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full ml-2">Recommended for Developers</span>}
             </button>
             
             <div className="relative">
@@ -199,10 +226,14 @@ const Signup = () => {
               <div className="text-sm text-muted-foreground">
                 <p className="mb-2 font-medium">By signing up, you get:</p>
                 <ul className="space-y-1">
-                  {[
+                  {isDeveloper ? [
+                    "Access to developer dashboard",
+                    "App publishing capabilities",
+                    "Analytics for your published apps"
+                  ] : [
                     "Personalized app recommendations",
                     "Download history and favorites",
-                    "Developer tools for app distribution"
+                    "Early access to new releases"
                   ].map((benefit, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-primary mt-0.5" />

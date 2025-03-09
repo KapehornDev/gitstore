@@ -1,3 +1,4 @@
+
 name: Vite Github Pages Deployer
 description: "Deploy your Vite app to github pages using actions. Doesn't require commits and pushes, clean deployment using only artifacts."
 branding:
@@ -38,6 +39,10 @@ inputs:
     description: "Controls the working directory for both install and build steps"
     required: false
     default: "./"
+  env_vars:
+    description: "Environmental variables to pass to the build step"
+    required: false
+    default: ''
 outputs:
   github_pages_url:
     description: Github pages url provided by actions/deploy-pages, exposed as is.
@@ -88,12 +93,12 @@ runs:
                 npm ci; 
               fi
         shell: bash
-        #env:
-        #  NODE_ENV: production //Don't enable, it won't install Vite (ofc), and will fail the next step because vite will not be there
       - name: Build
         working-directory: ${{ inputs.working_path }}
         env:
           NODE_ENV: ${{ inputs.build_phase_node_env}}
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
               # Building project
               echo "public base path. $PUBLIC_BASE_PATH";

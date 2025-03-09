@@ -9,8 +9,11 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGitHub: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  getUserRole: () => 'user' | 'developer' | null;
+  isUserDeveloper: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state change event:", _event);
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -62,6 +66,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Sign in with GitHub
+  const signInWithGitHub = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'read:user user:email repo',
+        }
+      });
+      
+      if (error) throw error;
+      
+      // The redirect happens automatically, this is just for logging
+      console.log("GitHub OAuth initiated", data);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "GitHub sign in failed",
+        description: error.message,
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Sign up with email and password
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
@@ -72,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             full_name: fullName,
+            role: 'user', // Default role
           },
         }
       });
@@ -114,8 +147,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Get user role from metadata
+  const getUserRole = (): 'user' | 'developer' | null => {
+    if (!user) return null;
+    
+    const role = user.user_metadata?.role as string;
+    return (role === 'developer') ? 'developer' : 'user';
+  };
+
+  // Check if user is a developer
+  const isUserDeveloper = (): boolean => {
+    return getUserRole() === 'developer';
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      signIn, 
+      signInWithGitHub,
+      signUp, 
+      signOut,
+      getUserRole,
+      isUserDeveloper
+    }}>
       {children}
     </AuthContext.Provider>
   );
