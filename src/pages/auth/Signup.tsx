@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -14,9 +15,11 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { signUp, signInWithGitHub, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const captchaRef = useRef<HCaptcha>(null);
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -29,6 +32,10 @@ const Signup = () => {
     }
   }, [user, navigate]);
 
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -40,17 +47,29 @@ const Signup = () => {
       });
       return;
     }
+
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Captcha required",
+        description: "Please complete the captcha verification to continue.",
+      });
+      return;
+    }
     
     setIsLoading(true);
     
     try {
-      await signUp(email, password, name);
+      await signUp(email, password, name, captchaToken, isDeveloper ? 'developer' : 'user');
       toast({
         title: "Welcome to GitStore!",
         description: "Please check your email to confirm your account.",
       });
     } catch (error) {
       console.error('Signup error:', error);
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -188,6 +207,14 @@ const Signup = () => {
                 />
               </div>
               
+              <div className="flex justify-center my-4">
+                <HCaptcha
+                  sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual HCaptcha site key
+                  onVerify={handleCaptchaVerify}
+                  ref={captchaRef}
+                />
+              </div>
+              
               <div className="flex items-start gap-2">
                 <div className="flex items-center h-5 mt-1">
                   <input
@@ -215,7 +242,7 @@ const Signup = () => {
               
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !captchaToken}
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-2 px-4 rounded-lg font-medium transition-colors"
               >
                 {isLoading ? 'Creating account...' : 'Sign up'}

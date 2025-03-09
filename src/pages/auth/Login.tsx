@@ -1,19 +1,22 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Github } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { signIn, signInWithGitHub, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const captchaRef = useRef<HCaptcha>(null);
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -26,15 +29,22 @@ const Login = () => {
     }
   }, [user, navigate]);
 
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      await signIn(email, password);
+      await signIn(email, password, captchaToken || undefined);
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
+      // Reset captcha on error
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +133,14 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 border border-border rounded-lg bg-card"
                   required
+                />
+              </div>
+              
+              <div className="flex justify-center my-4">
+                <HCaptcha
+                  sitekey="10000000-ffff-ffff-ffff-000000000001" // Replace with your actual HCaptcha site key
+                  onVerify={handleCaptchaVerify}
+                  ref={captchaRef}
                 />
               </div>
               

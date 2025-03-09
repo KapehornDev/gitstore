@@ -8,9 +8,9 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<void>;
   signInWithGitHub: () => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, captchaToken: string, role?: 'user' | 'developer') => Promise<void>;
   signOut: () => Promise<void>;
   getUserRole: () => 'user' | 'developer' | null;
   isUserDeveloper: () => boolean;
@@ -44,10 +44,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      let options = {};
+      if (captchaToken) {
+        options = {
+          captchaToken
+        };
+      }
+      
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+        options
+      });
       
       if (error) throw error;
       toast({
@@ -95,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Sign up with email and password
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, captchaToken: string, role: 'user' | 'developer' = 'user') => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signUp({ 
@@ -104,8 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             full_name: fullName,
-            role: 'user', // Default role
+            role: role, // Set role based on user selection
           },
+          captchaToken: captchaToken
         }
       });
       

@@ -3,9 +3,13 @@ import { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, FileText, Code, Package, BookOpen } from 'lucide-react';
+import GitHubRepoImport from '@/components/developer/GitHubRepoImport';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Docs = () => {
+  const { user, isUserDeveloper } = useAuth();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -13,6 +17,7 @@ const Docs = () => {
   const docCategories = [
     {
       title: "Getting Started",
+      icon: <BookOpen className="h-5 w-5 text-primary" />,
       items: [
         { title: "Introduction to GitStore", link: "/docs/intro" },
         { title: "Creating a Developer Account", link: "/docs/account" },
@@ -21,6 +26,7 @@ const Docs = () => {
     },
     {
       title: "GitStore Files",
+      icon: <FileText className="h-5 w-5 text-primary" />,
       items: [
         { title: "File Format Specification", link: "/docs/file-spec" },
         { title: "Installation Instructions", link: "/docs/installation" },
@@ -29,10 +35,20 @@ const Docs = () => {
     },
     {
       title: "Deployment & Distribution",
+      icon: <Package className="h-5 w-5 text-primary" />,
       items: [
         { title: "Release Management", link: "/docs/releases" },
         { title: "Analytics & Metrics", link: "/docs/analytics" },
         { title: "User Feedback", link: "/docs/feedback" }
+      ]
+    },
+    {
+      title: "Developer API",
+      icon: <Code className="h-5 w-5 text-primary" />,
+      items: [
+        { title: "GitHub Integration", link: "/docs/github-integration" },
+        { title: "Publishing API", link: "/docs/publishing-api" },
+        { title: "Webhooks & Events", link: "/docs/webhooks" }
       ]
     }
   ];
@@ -52,7 +68,19 @@ const Docs = () => {
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {user && isUserDeveloper() && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-display font-semibold mb-6">Import Your GitHub Repository</h2>
+            <GitHubRepoImport />
+          </motion.div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {docCategories.map((category, index) => (
             <motion.div
               key={index}
@@ -61,7 +89,10 @@ const Docs = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="border rounded-xl p-6 bg-card"
             >
-              <h2 className="text-xl font-display font-semibold mb-4">{category.title}</h2>
+              <div className="flex items-center gap-2 mb-4">
+                {category.icon}
+                <h2 className="text-xl font-display font-semibold">{category.title}</h2>
+              </div>
               <ul className="space-y-3">
                 {category.items.map((item, itemIndex) => (
                   <li key={itemIndex}>
