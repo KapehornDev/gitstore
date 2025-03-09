@@ -81,6 +81,75 @@ export type Database = {
         }
         Relationships: []
       }
+      github_repos: {
+        Row: {
+          created_at: string
+          description: string | null
+          forks: number
+          full_name: string
+          has_gitstore_file: boolean
+          html_url: string
+          id: string
+          language: string | null
+          license_key: string | null
+          license_name: string | null
+          metadata: Json | null
+          name: string
+          owner_avatar_url: string | null
+          owner_login: string
+          repo_id: string
+          stars: number
+          status: string
+          topics: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          forks?: number
+          full_name: string
+          has_gitstore_file?: boolean
+          html_url: string
+          id?: string
+          language?: string | null
+          license_key?: string | null
+          license_name?: string | null
+          metadata?: Json | null
+          name: string
+          owner_avatar_url?: string | null
+          owner_login: string
+          repo_id: string
+          stars?: number
+          status?: string
+          topics?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          forks?: number
+          full_name?: string
+          has_gitstore_file?: boolean
+          html_url?: string
+          id?: string
+          language?: string | null
+          license_key?: string | null
+          license_name?: string | null
+          metadata?: Json | null
+          name?: string
+          owner_avatar_url?: string | null
+          owner_login?: string
+          repo_id?: string
+          stars?: number
+          status?: string
+          topics?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

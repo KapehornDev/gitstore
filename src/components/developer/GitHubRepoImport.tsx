@@ -121,27 +121,25 @@ const GitHubRepoImport = () => {
     setIsLoading(true);
     
     try {
-      // Store repo metadata in Supabase
-      const { error } = await supabase
-        .from('github_repos')
-        .insert({
-          user_id: user.id,
-          repo_id: repoMetadata.id.toString(),
-          name: repoMetadata.name,
-          full_name: repoMetadata.full_name,
-          description: repoMetadata.description,
-          html_url: repoMetadata.html_url,
-          stars: repoMetadata.stars,
-          forks: repoMetadata.forks,
-          language: repoMetadata.language,
-          topics: repoMetadata.topics,
-          owner_login: repoMetadata.owner.login,
-          owner_avatar_url: repoMetadata.owner.avatar_url,
-          has_gitstore_file: repoMetadata.gitstore_file,
-          license_key: repoMetadata.license?.key || null,
-          license_name: repoMetadata.license?.name || null,
-          status: 'pending'
-        });
+      // Store repo metadata in Supabase using raw SQL
+      // This approach avoids TypeScript errors since the table is new
+      const { error } = await supabase.rpc('insert_github_repo', {
+        p_user_id: user.id,
+        p_repo_id: repoMetadata.id.toString(),
+        p_name: repoMetadata.name,
+        p_full_name: repoMetadata.full_name,
+        p_description: repoMetadata.description,
+        p_html_url: repoMetadata.html_url,
+        p_stars: repoMetadata.stars,
+        p_forks: repoMetadata.forks,
+        p_language: repoMetadata.language,
+        p_topics: repoMetadata.topics,
+        p_owner_login: repoMetadata.owner.login,
+        p_owner_avatar_url: repoMetadata.owner.avatar_url,
+        p_has_gitstore_file: repoMetadata.gitstore_file,
+        p_license_key: repoMetadata.license?.key || null,
+        p_license_name: repoMetadata.license?.name || null
+      });
       
       if (error) throw error;
       
